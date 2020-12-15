@@ -5,6 +5,7 @@ from sklearn.impute import KNNImputer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 import xgboost as xgb
 
 
@@ -12,8 +13,7 @@ def regression_precision_error(y_true, y_pred):
     return np.sum(np.absolute(y_true - y_pred) / y_true) / len(y_true)
 
 
-def validation(params=None, random_state=1):
-    default_params = {'learning_rate': 0.01, 'max_depth': 2, 'n_estimators': 1000, 'subsample': 0.9}
+def validation(models, model_names, random_state=1):
 
     drop_cols = ['token',
                  'serial_number',
@@ -25,9 +25,6 @@ def validation(params=None, random_state=1):
                  '2_8_range_duration']
 
     target_name = '2_8_range_duration'
-
-    if params:
-        default_params = params
 
     # Load json
     df = pd.read_json('../data/c3_json.json', orient='records')
@@ -43,35 +40,44 @@ def validation(params=None, random_state=1):
     X_train, X_test, y_train, y_test = train_test_split(train_df, target_var,
                                                         test_size=0.2,
                                                         random_state=random_state)
-
-    imputer = KNNImputer(n_neighbors=5, weights='uniform', metric='nan_euclidean')
-
-    model = xgb.XGBRegressor(**default_params)
-
-    # A pipeline to process the feature data
-    pipeline = Pipeline(steps=[('knn', imputer),
-                               ('m', model)])
-
-    pipeline.fit(X_train, y_train)
-
-    train_pred = pipeline.predict(X_train)
-    test_pred = pipeline.predict(X_test)
-
-    model_names = ['xgboost']
-
     scores = []
 
-    for i in model_names:
-        scores.append(
-            {
-                'train_MAE': mean_absolute_error(y_train, train_pred),
-                'test_MAE': mean_absolute_error(y_test, test_pred),
-                'train_AAD': regression_precision_error(y_train, train_pred),
-                'test_AAD': regression_precision_error(y_test, test_pred)
-             },
-        )
+    for model in models:
+
+        imputer = KNNImputer(n_neighbors=5, weights='uniform', metric='nan_euclidean')
+
+        # A pipeline to process the feature data
+        pipeline = Pipeline(steps=[('knn', imputer),
+                                   ('m', model)])
+
+        pipeline.fit(X_train, y_train)
+
+        train_pred = pipeline.predict(X_train)
+        test_pred = pipeline.predict(X_test)
+
+        scores.append({
+            'train_MAE': mean_absolute_error(y_train, train_pred),
+            'test_MAE': mean_absolute_error(y_test, test_pred),
+            'train_AAD': regression_precision_error(y_train, train_pred),
+            'test_AAD': regression_precision_error(y_test, test_pred)
+        })
+
     return pd.DataFrame(scores, index=model_names)
 
 
 if __name__ == '__main__':
-    print(validation())
+    model_names = ['xgboost', 'gradient_boosting', 'random_forest']
+    params = []
+
+    for i in model_names:
+        with open('{}_params.json'.format(i), 'r') as f:
+            model_params = json.load(f)
+            params.append(model_params)
+
+    models = [xgb.XGBRegressor(**params[0]),
+              GradientBoostingRegressor(**params[1]),
+              RandomForestRegressor(**params[2])]
+
+    val_scores = validation(models, model_names)
+
+    print(val_scores)
