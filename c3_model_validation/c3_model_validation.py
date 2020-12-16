@@ -1,11 +1,13 @@
 import pandas as pd
 import numpy as np
 import json
+import matplotlib.pyplot as plt
 from sklearn.impute import KNNImputer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.inspection import permutation_importance
 import xgboost as xgb
 
 
@@ -14,7 +16,6 @@ def regression_precision_error(y_true, y_pred):
 
 
 def validation(models, model_names, random_state=1):
-
     drop_cols = ['token',
                  'serial_number',
                  'model',
@@ -43,7 +44,6 @@ def validation(models, model_names, random_state=1):
     scores = []
 
     for model in models:
-
         imputer = KNNImputer(n_neighbors=5, weights='uniform', metric='nan_euclidean')
 
         # A pipeline to process the feature data
@@ -65,6 +65,47 @@ def validation(models, model_names, random_state=1):
     return pd.DataFrame(scores, index=model_names)
 
 
+def feature_importance_plot(model, scoring='neg_mean_absolute_error', plot=False, save_plot=False):
+    drop_cols = ['token',
+                 'serial_number',
+                 'model',
+                 'package_name',
+                 'start_time',
+                 'exit_time',
+                 'min_ambient_temp',
+                 '2_8_range_duration']
+
+    target_name = '2_8_range_duration'
+
+    # Load json
+    df = pd.read_json('../data/c3_json.json', orient='records')
+
+    # Engineer features
+    df['max_to_min_ratio'] = df['max_ambient_temp'] / df['min_ambient_temp']
+    # df['min_to_max_ratio'] = df['min_ambient_temp'] / df['max_ambient_temp']
+
+    train_df = df.drop(drop_cols, axis=1).copy()
+    target_var = df[target_name].values
+
+    feature_cols = train_df.columns
+
+    model.fit(train_df, target_var)
+
+    results = permutation_importance(model, train_df, target_var, scoring=scoring)
+    importance = results.importances_mean
+
+    for i, v in zip(feature_cols, importance):
+        print('Feature: {}, Score: {:.5f}'.format(i, v))
+
+    if plot:
+        fig = plt.figure()
+        plt.bar([x for x in feature_cols], importance)
+        plt.show()
+
+        if save_plot:
+            fig.savefig('feature_importance_plot.png')
+
+
 if __name__ == '__main__':
     model_names = ['xgboost', 'gradient_boosting', 'random_forest']
     params = []
@@ -81,3 +122,10 @@ if __name__ == '__main__':
     val_scores = validation(models, model_names)
 
     print(val_scores)
+
+    print()
+
+    print('Feature importance...')
+    print()
+
+    feature_importance_plot(model=models[0], plot=True, save_plot=True)
