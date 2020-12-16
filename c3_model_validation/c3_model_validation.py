@@ -32,7 +32,7 @@ def validation(models, model_names, random_state=1):
 
     # Engineer features
     df['max_to_min_ratio'] = df['max_ambient_temp'] / df['min_ambient_temp']
-    df['min_to_max_ratio'] = df['min_ambient_temp'] / df['max_ambient_temp']
+    # df['min_to_max_ratio'] = df['min_ambient_temp'] / df['max_ambient_temp']
 
     train_df = df.drop(drop_cols, axis=1).copy()
     target_var = df[target_name].values
