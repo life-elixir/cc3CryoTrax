@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+from matplotlib import style
 from sklearn.impute import KNNImputer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_absolute_error
@@ -9,6 +10,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.inspection import permutation_importance
 import xgboost as xgb
+
+style.use('ggplot')
 
 
 def regression_precision_error(y_true, y_pred):
@@ -81,7 +84,7 @@ def feature_importance_plot(model, scoring='neg_mean_absolute_error', plot=False
     df = pd.read_json('../data/c3_json.json', orient='records')
 
     # Engineer features
-    df['max_to_min_ratio'] = df['max_ambient_temp'] / df['min_ambient_temp']
+    df['max_to_min_ambient_ratio'] = df['max_ambient_temp'] / df['min_ambient_temp']
     # df['min_to_max_ratio'] = df['min_ambient_temp'] / df['max_ambient_temp']
 
     train_df = df.drop(drop_cols, axis=1).copy()
@@ -98,8 +101,12 @@ def feature_importance_plot(model, scoring='neg_mean_absolute_error', plot=False
         print('Feature: {}, Score: {:.5f}'.format(i, v))
 
     if plot:
-        fig = plt.figure()
-        plt.bar([x for x in feature_cols], importance)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.bar([x for x in feature_cols], importance)
+        plt.title('Feature importance by permutation importance', fontsize=17)
+        plt.xlabel('Feature', fontsize=13)
+        for idx, data in zip(feature_cols, importance):
+            plt.text(x=idx, y=data, s=f"{round(data, 2)}", fontdict=dict(fontsize=15))
         plt.show()
 
         if save_plot:

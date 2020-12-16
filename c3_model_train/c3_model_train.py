@@ -25,7 +25,7 @@ def c3_model_train():
     df = pd.read_json('../data/c3_json.json', orient='records')
 
     # Engineer features
-    df['max_to_min_ratio'] = df['max_ambient_temp'] / df['min_ambient_temp']
+    df['max_to_min_ambient_ratio'] = df['max_ambient_temp'] / df['min_ambient_temp']
 
     train_df = df.drop(drop_cols, axis=1)
     target_var = df[target_name].values
@@ -44,4 +44,5 @@ def c3_model_train():
 
     msg = 'Successfully re-trained model and generated new .pkl files for c3_model'
     print(msg)
+
     return msg
