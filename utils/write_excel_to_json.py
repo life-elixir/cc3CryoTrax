@@ -3,6 +3,7 @@ import json
 
 
 def convert_excel_to_json(filename, json_file_name, sheet_name=0):
+    """Convert xlsx into json."""
     df = pd.read_excel('../data/' + filename,
                        sheet_name=sheet_name,
                        engine='openpyxl')

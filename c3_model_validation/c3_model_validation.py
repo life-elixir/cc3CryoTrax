@@ -76,7 +76,8 @@ def feature_importance_plot(model, scoring='neg_mean_absolute_error', plot=False
                  'start_time',
                  'exit_time',
                  'min_ambient_temp',
-                 '2_8_range_duration']
+                 '2_8_range_duration',
+                 'max_ambient_temp']
 
     target_name = '2_8_range_duration'
 

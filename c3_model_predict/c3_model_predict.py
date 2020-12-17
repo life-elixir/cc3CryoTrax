@@ -62,6 +62,7 @@ def check_c3_input_data(lst, input_features, required_features):
 
 
 def load_model():
+    """Load the model and its associate training features."""
     model = pickle.load(open('../c3_model_train/c3_model.pickle', 'rb'))
     print('Model loaded')
     model_columns = pickle.load(open('../c3_model_train/c3_model_columns.pickle', 'rb'))
@@ -73,20 +74,20 @@ def c3_model_predict(json_):
     model, model_cols = load_model()
 
     if model:
-        required_features = ['max_ambient_temp',
-                             'ambient_mkt_value']
+        required_features = ['ambient_mkt_value']
 
         model_cols.remove('max_to_min_ambient_ratio')
 
         query = check_c3_input_data(json_, model_cols, required_features)
 
         model_cols.append('min_ambient_temp')
+        model_cols.append('max_ambient_temp',)
 
         query = query.reindex(columns=model_cols, fill_value=0)
 
         query['max_to_min_ambient_ratio'] = query['max_ambient_temp'] / query['min_ambient_temp']
 
-        query.drop('min_ambient_temp', axis=1, inplace=True)
+        query.drop(['min_ambient_temp', 'max_ambient_temp'], axis=1, inplace=True)
 
         print('Predicting')
 

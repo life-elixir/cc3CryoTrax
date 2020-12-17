@@ -17,6 +17,7 @@ def c3_model_train():
                  'start_time',
                  'exit_time',
                  'min_ambient_temp',
+                 'max_ambient_temp',
                  '2_8_range_duration']
 
     target_name = '2_8_range_duration'
