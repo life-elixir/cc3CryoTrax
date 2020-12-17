@@ -9,7 +9,7 @@ def convert_excel_to_json(filename, json_file_name, sheet_name=0):
     json_str = df.to_json(orient='records')
     unstr_json = json.loads(json_str)
     with open('../data/' + json_file_name, 'w+') as f:
-        json.dump(unstr_json, f)
+        json.dump(unstr_json, f, indent=1)
     return
 
 

@@ -26,6 +26,8 @@ def c3_model_train():
 
     # Engineer features
     df['max_to_min_ambient_ratio'] = df['max_ambient_temp'] / df['min_ambient_temp']
+    
+    df.rename(columns={'ambient_MKT_value': 'ambient_mkt_value'}, inplace=True)
 
     train_df = df.drop(drop_cols, axis=1)
     target_var = df[target_name].values
@@ -42,7 +44,14 @@ def c3_model_train():
     with open('c3_model.pickle', 'wb') as f:
         pickle.dump(pipeline, f)
 
+    with open('c3_model_columns.pickle', 'wb') as f:
+        pickle.dump(train_df.columns.to_list(), f)
+
     msg = 'Successfully re-trained model and generated new .pkl files for c3_model'
     print(msg)
 
     return msg
+
+
+if __name__ == '__main__':
+    c3_model_train()
