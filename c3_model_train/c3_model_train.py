@@ -2,13 +2,15 @@ import pickle
 import pandas as pd
 from sklearn.impute import KNNImputer
 from sklearn.pipeline import Pipeline
-import xgboost as xgb
+from sklearn.neighbors import LocalOutlierFactor
+# import xgboost as xgb
+from sklearn.ensemble import RandomForestRegressor
 
 
 def c3_model_train():
-    params = {"learning_rate": 0.01,
-              "n_estimators": 100,
-              "subsample": 1.0}
+    params = {"criterion": "mae",
+              "max_depth": 2,
+              "n_estimators": 100}
 
     drop_cols = ['token',
                  'serial_number',
@@ -30,10 +32,23 @@ def c3_model_train():
     
     df.rename(columns={'ambient_MKT_value': 'ambient_mkt_value'}, inplace=True)
 
-    train_df = df.drop(drop_cols, axis=1)
-    target_var = df[target_name].values
+    dff = df[['min_ambient_temp', 'max_ambient_temp', 'ambient_mkt_value']].copy()
 
-    model = xgb.XGBRegressor(**params)
+    lof = LocalOutlierFactor()
+
+    yhat = lof.fit_predict(dff)
+
+    mask = yhat != -1
+
+    new_df = df.values[mask, :]
+    new_df = pd.DataFrame(new_df, columns=df.columns)
+
+    train_df = new_df.drop(drop_cols, axis=1).copy()
+    train_df = train_df.astype('float')
+    target_var = new_df[target_name].values
+
+    # model = xgb.XGBRegressor(**params)
+    model = RandomForestRegressor(**params)
 
     imputer = KNNImputer(n_neighbors=5, weights='uniform', metric='nan_euclidean')
 

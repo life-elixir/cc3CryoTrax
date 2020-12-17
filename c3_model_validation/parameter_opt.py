@@ -3,6 +3,7 @@ import pandas as pd
 import json
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.neighbors import LocalOutlierFactor
 import xgboost
 
 params_xgboost = dict(
@@ -33,6 +34,7 @@ drop_cols = ['token',
              'start_time',
              'exit_time',
              'min_ambient_temp',
+             'max_ambient_temp',
              '2_8_range_duration']
 
 target_name = '2_8_range_duration'
@@ -42,10 +44,22 @@ df = pd.read_json('../data/c3_json.json', orient='records')
 
 # Engineer features
 df['max_to_min_ratio'] = df['max_ambient_temp'] / df['min_ambient_temp']
-df['min_to_max_ratio'] = df['min_ambient_temp'] / df['max_ambient_temp']
+# df['min_to_max_ratio'] = df['min_ambient_temp'] / df['max_ambient_temp']
 
-train_df = df.drop(drop_cols, axis=1).copy()
-target_var = df[target_name].values
+dff = df[['min_ambient_temp', 'max_ambient_temp', 'ambient_MKT_value']].copy()
+
+lof = LocalOutlierFactor()
+
+yhat = lof.fit_predict(dff)
+
+mask = yhat != -1
+
+new_df = df.values[mask, :]
+new_df = pd.DataFrame(new_df, columns=df.columns)
+
+train_df = new_df.drop(drop_cols, axis=1).copy()
+train_df = train_df.astype('float')
+target_var = new_df[target_name].values
 
 xgb = xgboost.XGBRegressor()
 r = RandomForestRegressor()

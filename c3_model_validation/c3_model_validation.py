@@ -9,6 +9,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.inspection import permutation_importance
+from sklearn.neighbors import LocalOutlierFactor
 import xgboost as xgb
 
 style.use('ggplot')
@@ -18,7 +19,7 @@ def regression_precision_error(y_true, y_pred):
     return np.sum(np.absolute(y_true - y_pred) / y_true) / len(y_true)
 
 
-def validation(models, model_names, random_state=1):
+def validation(models, model_names, random_state=2):
     drop_cols = ['token',
                  'serial_number',
                  'model',
@@ -26,6 +27,7 @@ def validation(models, model_names, random_state=1):
                  'start_time',
                  'exit_time',
                  'min_ambient_temp',
+                 'max_ambient_temp',
                  '2_8_range_duration']
 
     target_name = '2_8_range_duration'
@@ -37,8 +39,20 @@ def validation(models, model_names, random_state=1):
     df['max_to_min_ratio'] = df['max_ambient_temp'] / df['min_ambient_temp']
     # df['min_to_max_ratio'] = df['min_ambient_temp'] / df['max_ambient_temp']
 
-    train_df = df.drop(drop_cols, axis=1).copy()
-    target_var = df[target_name].values
+    # Remove outliers
+    dff = df[['min_ambient_temp', 'max_ambient_temp', 'ambient_MKT_value']].copy()
+
+    lof = LocalOutlierFactor()
+
+    yhat = lof.fit_predict(dff)
+
+    mask = yhat != -1
+
+    new_df = df.values[mask, :]
+    new_df = pd.DataFrame(new_df, columns=df.columns)
+
+    train_df = new_df.drop(drop_cols, axis=1).copy()
+    target_var = new_df[target_name].values
 
     # Cross validation
     X_train, X_test, y_train, y_test = train_test_split(train_df, target_var,
