@@ -74,14 +74,16 @@ def c3_model_predict(json_):
     model, model_cols = load_model()
 
     if model:
-        required_features = ['ambient_mkt_value']
+        required_features = ['ambient_mkt_value',
+                             'min_ambient_temp',
+                             'max_ambient_temp']
 
         model_cols.remove('max_to_min_ambient_ratio')
 
         query = check_c3_input_data(json_, model_cols, required_features)
 
         model_cols.append('min_ambient_temp')
-        model_cols.append('max_ambient_temp',)
+        model_cols.append('max_ambient_temp', )
 
         query = query.reindex(columns=model_cols, fill_value=0)
 
