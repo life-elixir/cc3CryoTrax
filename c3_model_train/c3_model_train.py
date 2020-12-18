@@ -8,6 +8,8 @@ from sklearn.ensemble import RandomForestRegressor
 
 
 def c3_model_train():
+    """Train the c3 model, and save the model and the training features into pickle."""
+
     params = {"criterion": "mae",
               "max_depth": 2,
               "n_estimators": 100}
