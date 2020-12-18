@@ -71,6 +71,12 @@ def load_model():
 
 
 def c3_model_predict(json_):
+    """
+    The only raw feature for the model is ambient_mkt_value, but need to keep min_ambient_temp and max_ambient_temp
+    to engineer the max_to_min_ambient_ratio feature.
+    :param json_: list of input data in json format
+    :return: (np.array) prediction
+    """
     model, model_cols = load_model()
 
     if model:
@@ -78,17 +84,23 @@ def c3_model_predict(json_):
                              'min_ambient_temp',
                              'max_ambient_temp']
 
+        # Model_cols is the columns used to train the model, but we need to delete max_to_min_ambient_ratio
+        # because it doesn't exist in the raw input.
         model_cols.remove('max_to_min_ambient_ratio')
 
+        # We need to check required features, but will only use ambient_mkt_value, the other two are required because
+        # they will be used for feature engineer.
         query = check_c3_input_data(json_, model_cols, required_features)
 
         model_cols.append('min_ambient_temp')
-        model_cols.append('max_ambient_temp', )
+        model_cols.append('max_ambient_temp')
 
         query = query.reindex(columns=model_cols, fill_value=0)
 
+        # Engineer the feature
         query['max_to_min_ambient_ratio'] = query['max_ambient_temp'] / query['min_ambient_temp']
 
+        # Drop the unused columns
         query.drop(['min_ambient_temp', 'max_ambient_temp'], axis=1, inplace=True)
 
         print('Predicting')
