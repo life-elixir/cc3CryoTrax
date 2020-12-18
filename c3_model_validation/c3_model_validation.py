@@ -16,10 +16,18 @@ style.use('ggplot')
 
 
 def regression_precision_error(y_true, y_pred):
+    """Calculate absolute average error."""
     return np.sum(np.absolute(y_true - y_pred) / y_true) / len(y_true)
 
 
 def validation(models, model_names, random_state=2):
+    """
+    Given a set of models, and the list of their corresponding name, process the data,
+    and then fit the data into each model, validate the model performance by train-test-split with 8:2 ratio with MAE
+    and AAD metrics, save the scores into a dataframe.
+
+    return pd.DataFrame
+    """
     drop_cols = ['token',
                  'serial_number',
                  'model',
@@ -83,6 +91,9 @@ def validation(models, model_names, random_state=2):
 
 
 def feature_importance_plot(model, scoring='neg_mean_absolute_error', plot=False, save_plot=False):
+    """
+    Plot feature importance based on permutation importance.
+    """
     drop_cols = ['token',
                  'serial_number',
                  'model',
