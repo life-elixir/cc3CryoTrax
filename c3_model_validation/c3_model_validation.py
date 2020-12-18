@@ -93,6 +93,11 @@ def validation(models, model_names, random_state=2):
 def feature_importance_plot(model, scoring='neg_mean_absolute_error', plot=False, save_plot=False):
     """
     Plot feature importance based on permutation importance.
+    :param model: pre-trained ml model
+    :param scoring: (str, default neg_mean_absolute_error)
+    :param plot: (bool, default False) if True, plot feature importance plot.
+    :param save_plot: (bool, default False) if True, save the feature importance plot as png in the same directory.
+    :return: None
     """
     drop_cols = ['token',
                  'serial_number',
@@ -137,6 +142,8 @@ def feature_importance_plot(model, scoring='neg_mean_absolute_error', plot=False
 
         if save_plot:
             fig.savefig('feature_importance_plot.png')
+
+    return
 
 
 if __name__ == '__main__':
